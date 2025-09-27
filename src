@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Assistant – What can I help with?</title>
+  <style>
+    :root{
+      --bg: #ffffff;
+      --fg: #0b0f13;
+      --muted:#6b7280;
+      --ring:#d1d5db;
+      --card:#f8fafc;
+      --shadow: 0 1px 2px rgba(0,0,0,.06), 0 6px 24px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: var(--bg); color: var(--fg);
+    }
+    .wrap{min-height:100%; display:flex; flex-direction:column}
+
+    /* Top chrome (tiny brand stub like the screenshot) */
+    .topbar{height:40px; display:flex; align-items:center; gap:.5rem; padding:0 .75rem; color:#6b7280}
+    .topdot{width:6px; height:6px; border-radius:999px; background:#9ca3af}
+
+    /* Main hero */
+    .hero{flex:1; display:grid; place-items:center; padding:2rem}
+    .hero-inner{width:100%; max-width:1050px; margin:0 auto; text-align:center}
+    h1{
+      font-weight:650; letter-spacing:.01em; margin:0 0 28px; font-size:clamp(28px, 3.2vw, 40px);
+    }
+
+    /* Search */
+    .search{
+      --h: 64px;
+      display:flex; align-items:center; gap:.75rem; width: min(980px, 96vw);
+      margin:0 auto; border-radius:999px; background:#fff; box-shadow: var(--shadow);
+      border:1px solid var(--ring); padding:0 .75rem 0 .5rem;
+    }
+    .chip{display:grid; place-items:center; width:40px; height:40px; border-radius:999px; background:var(--card); border:1px solid var(--ring)}
+    .chip svg{width:18px; height:18px;}
+    .input{flex:1; height:var(--h); display:flex; align-items:center}
+    .input input{
+      width:100%; height:38px; border:0; outline:none; font-size:18px; color:var(--fg);
+    }
+    .actions{display:flex; align-items:center; gap:.25rem}
+    .iconbtn{display:grid; place-items:center; width:44px; height:44px; border-radius:999px; border:1px solid transparent; background:transparent; cursor:pointer}
+    .iconbtn:hover{background:#f3f4f6}
+    .iconbtn:active{transform:translateY(1px)}
+    .iconbtn svg{width:22px; height:22px; stroke:#111827}
+
+    /* Footer hint */
+    .hint{margin-top:14px; color:var(--muted); font-size:14px}
+
+    /* Mobile tweaks */
+    @media (max-width:520px){
+      .search{gap:.5rem; padding:0 .5rem}
+      .chip{width:36px; height:36px}
+      .iconbtn{width:40px; height:40px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar" aria-hidden="true">
+      <div class="topdot"></div>
+      <div class="topdot"></div>
+      <div class="topdot"></div>
+    </div>
+
+    <main class="hero">
+      <div class="hero-inner">
+        <h1>What can I help with?</h1>
+        <div class="search" role="search" aria-label="Ask anything">
+          <div class="chip" title="Create new">
+            <!-- plus icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
+          <label class="input">
+            <span class="sr-only">Ask anything</span>
+            <input id="q" placeholder="Ask anything" autocomplete="off" />
+          </label>
+          <div class="actions">
+            <button class="iconbtn" id="voiceBtn" title="Voice input">
+              <!-- mic icon -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 1a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10a7 7 0 0 1-14 0"/>
+                <path d="M12 19v4"/>
+              </svg>
+            </button>
+            <button class="iconbtn" id="pulseBtn" title="Quick action">
+              <!-- equalizer / pulse icon -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 12h4l2-7 4 14 2-7h4"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <p class="hint">Tip: Press <kbd>/</kbd> to focus</p>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // a11y helpers
+    const input = document.getElementById('q');
+    window.addEventListener('keydown', (e)=>{
+      if(e.key === '/' && document.activeElement !== input){
+        e.preventDefault(); input.focus();
+      }
+    });
+
+    // Fake pulse animation on click
+    document.getElementById('pulseBtn').addEventListener('click', ()=>{
+      const el = document.querySelector('.search');
+      el.animate([{boxShadow:'0 0 0 0 rgba(0,0,0,0)'},{boxShadow:'0 0 0 6px rgba(59,130,246,.15)'}],{duration:350, direction:'alternate'});
+    });
+
+    // Optional voice input (best-effort; will no-op if unsupported)
+    const voiceBtn = document.getElementById('voiceBtn');
+    let recog;
+    if('webkitSpeechRecognition' in window){
+      recog = new webkitSpeechRecognition();
+      recog.lang = 'en-US';
+      recog.interimResults = true;
+      voiceBtn.addEventListener('click', ()=>{
+        if(voiceBtn.dataset.active){
+          recog.stop(); voiceBtn.removeAttribute('data-active');
+          return;
+        }
+        input.value='';
+        recog.start(); voiceBtn.dataset.active = '1';
+      });
+      recog.onresult = (e)=>{
+        let t=''; for(const r of e.results){ t += r[0].transcript; }
+        input.value = t.trim();
+      };
+      recog.onend = ()=> voiceBtn.removeAttribute('data-active');
+    } else {
+      voiceBtn.addEventListener('click', ()=> alert('Speech recognition not supported in this browser.'))
+    }
+  </script>
+</body>
+</html>
